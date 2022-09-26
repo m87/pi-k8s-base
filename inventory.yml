@@ -1,0 +1,40 @@
+all:
+  vars:
+    ansible_user: root
+    ansible_python_interpreter: /usr/bin/python3
+  children:
+    gateway:
+      hosts:
+        k8s-gateway-1:
+          ansible_host: 192.168.0.50
+    master:
+      hosts:
+        k8s-master-1:
+          ansible_host: 192.168.1.101
+          hostname: k8s-master-1
+    worker:
+      hosts:
+#        k8s-worker-1:
+#          ansible_host: 192.168.1.201
+#          hostname: k8s-worker-1
+        k8s-worker-2:
+          ansible_host: 192.168.1.202
+          hostname: k8s-worker-2
+        k8s-worker-3:
+          ansible_host: 192.168.1.203
+          hostname: k8s-worker-3
+        k8s-worker-4:
+          ansible_host: 192.168.1.204
+          hostname: k8s-worker-4
+        k8s-worker-5:
+          ansible_host: 192.168.1.205
+          hostname: k8s-worker-5
+        k8s-worker-6:
+          ansible_host: 192.168.1.102
+          hostname: k8s-worker-6
+        k8s-worker-7:
+          ansible_host: 192.168.1.103
+          hostname: k8s-worker-7
+#          labels:
+#            - key: storage
+#              value: "true"

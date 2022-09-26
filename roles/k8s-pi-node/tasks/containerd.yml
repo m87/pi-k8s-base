@@ -1,0 +1,52 @@
+
+- name: Get containerd
+  get_url:
+    url: 'https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/containerd-{{ containerd_version }}-linux-arm64.tar.gz'
+    dest: /tmp/containerd.tar.gz
+
+- name: Extract containerd
+  command: tar Cxzvf /usr/local /tmp/containerd.tar.gz
+
+- name: containerd dir
+  file:
+    path: /etc/containerd
+    state: directory
+
+- name: containerd config
+  shell: containerd config default > /etc/containerd/config.toml
+
+- name: Set SystemdCgroup
+  replace:
+    path: /etc/containerd/config.toml
+    regexp: "SystemdCgroup = false"
+    replace: "SystemdCgroup = true"
+
+- name: Create service dir
+  command: mkdir -p /usr/local/lib/systemd/system/
+
+- name: Get service
+  get_url:
+    url: https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+    dest: /usr/local/lib/systemd/system/containerd.service
+
+- name: Get runc
+  get_url:
+    url: 'https://github.com/opencontainers/runc/releases/download/v{{ runc_version }}/runc.arm64'
+    dest: /tmp/runc.arm64
+
+- name: Install runc
+  command: install -m 755 /tmp/runc.arm64 /usr/local/sbin/runc
+
+- name: Get cni plugins
+  get_url:
+    url: 'https://github.com/containernetworking/plugins/releases/download/v{{ cni_plugins_version }}/cni-plugins-linux-arm64-v{{ cni_plugins_version }}.tgz'
+    dest: /tmp/cni.tgz
+
+- name: create cni dir
+  command: mkdir -p /opt/cni/bin
+
+- name: Extract cni plugins
+  command: tar Cxzvf /opt/cni/bin /tmp/cni.tgz
+
+- name: Reload service
+  shell: "systemctl daemon-reload && systemctl enable --now containerd"

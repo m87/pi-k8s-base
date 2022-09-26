@@ -1,0 +1,10 @@
+---
+
+- name: Install pi-node
+  import_tasks: install.yml
+
+- name: Tear down pi-node
+  import_tasks: tearDown.yml
+  tags:
+    - never
+    - tea2rDown

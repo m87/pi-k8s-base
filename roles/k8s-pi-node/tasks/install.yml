@@ -1,0 +1,86 @@
+---
+- name: Tear down pi-node
+  import_tasks: tearDown.yml
+
+#- name: Add hosts
+#  lineinfile:
+#    path: /etc/hosts
+#    regexp: '.*{{ item }}$'
+#    line: "{{ hostvars[item].ansible_host }} {{item}}"
+#    state: present
+#  when: hostvars[item].ansible_host is defined
+#  with_items: "{{ groups.all }}"
+
+- name: Clean apt cache
+  command: rm /var/lib/apt/lists/* -vf
+
+- name: Update apt (workaround "apt cache update failed")
+  command: apt update
+
+- name: Install required packages
+  apt:
+    pkg: "{{ required_packages }}"
+    state: latest
+
+- name: Copy modules list
+  copy:
+    src: modules-k8s.conf
+    dest: /etc/modules-load.d/k8s.conf
+
+- name: Copy k8s system config file
+  copy:
+    src: k8s.conf
+    dest: /etc/sysctl.d/k8s.conf
+
+- name: Set a hostname
+  shell: 'echo "{{ hostname }}" > /etc/hostname'
+
+- name: Set required boot options
+  include_tasks: bootOptions.yml
+  loop: "{{ boot_options }}"
+
+- name: Install containerd
+  include_tasks: containerd.yml
+
+- name: Disable swap
+  shell: systemctl disable dphys-swapfile.service
+
+- name: Reboot
+  reboot:
+
+- name: Set promisc[layer 2 metallb https://github.com/metallb/metallb/issues/284]
+  command: ifconfig wlan0 promisc
+
+#- name: Ensure legacy iptables
+#  shell: "update-alternatives --set iptables /usr/sbin/iptables-legacy && update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy && update-alternatives --set arptables /usr/sbin/arptables-legacy &&    update-alternatives --set ebtables /usr/sbin/ebtables-legacy"
+
+- name: Add k8s key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+
+
+- name: Add k8s repo
+  apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+
+- name: Clean apt cache
+  command: rm /var/lib/apt/lists/* -vf
+
+- name: Update apt (workaround "apt cache update failed")
+  command: apt update
+  ignore_errors: true
+
+- name: Install k8s
+  apt:
+    pkg:
+      - kubeadm
+      - kubectl
+      - kubelet
+    state: latest
+
+- name: Restart kubelet
+  service:
+    name: kubelet
+    daemon_reload: yes
+    state: restarted

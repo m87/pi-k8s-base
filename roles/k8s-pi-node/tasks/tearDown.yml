@@ -1,0 +1,29 @@
+---
+
+- name: Gather packages facts
+  package_facts:
+    manager: auto
+
+- name: Remove last instance
+  block:
+    - name: K8s cluster reset   # noqa 301
+      command: kubeadm reset -f
+
+    - name: Remve old .kube directory
+      file:
+        path: /root/.kube
+        state: absent
+
+    - name: Remove old cni
+      file:
+        path: /etc/cni/net.d
+        state: absent
+    - name: Remove old certs
+      file:
+        path: /etc/kubernetes/pki
+        state: absent
+
+    - name: Flush iptables
+      shell: iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+  when: "'kubeadm' in ansible_facts.packages"
+

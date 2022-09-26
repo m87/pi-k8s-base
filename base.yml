@@ -1,0 +1,21 @@
+---
+- name: Prepare master node
+  gather_facts: true
+  hosts: master
+  roles:
+    - role: k8s-pi-node
+    - role: k8s-master
+  vars:
+    - ansible_user: root
+#    - network: flannel
+#    - network: weave
+    - network: calico
+
+- name: Prepare worker node
+  gather_facts: true
+  hosts: worker
+  roles:
+    - role: k8s-pi-node
+    - role: k8s-worker
+  vars:
+    - ansible_user: root

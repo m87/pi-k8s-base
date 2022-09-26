@@ -1,0 +1,16 @@
+---
+- name: "Check if {{ item }} is set"
+  lineinfile:
+    path: /boot/cmdline.txt
+    regexp: "{{ item }}"
+    state: absent
+  check_mode: yes
+  register: cgroup_change
+
+- name: Append {{ item }}
+  lineinfile:
+    path: /boot/cmdline.txt
+    regexp: '(.+)'
+    line: '\1 {{ item }}'
+    backrefs: true
+  when: cgroup_change is not changed

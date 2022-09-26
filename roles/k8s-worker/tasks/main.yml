@@ -1,0 +1,42 @@
+- name: Check last installation
+  stat:
+    path: /root/.kube
+  register: k8s_cfg_details
+
+- name: K8s cluster reset
+  command: kubeadm reset -f
+  environment:
+    - KUBECONFIG: /etc/kubernetes/kubelet.conf
+  when: k8s_cfg_details.stat.exists
+
+- name: Remve old .kube directory
+  file:
+    path: /root/.kube
+    state: absent
+
+- name: Obtain join token # noqa 301
+  shell: kubeadm token create --print-join-command 2>/dev/null
+  register: join_command
+  delegate_to: "{{ master_node }}"
+  become: yes
+  become_user: root
+
+- name: Join the node to cluster # noqa 301
+  command: "{{ join_command.stdout_lines[0] }}"
+
+- name: Create .kube directory
+  file:
+    path: /root/.kube
+    state: directory
+    mode: 0755
+
+- name: Copy admin.conf to user's kube config
+  copy:
+    src: /etc/kubernetes/kubelet.conf
+    dest: /root/.kube/config
+    remote_src: yes
+
+- name: Label node
+  command: "kubectl label nodes {{hostname}} {{item.key}}={{item.value}}"
+  with_items: "{{ labels }}"
+  when: labels is defined
