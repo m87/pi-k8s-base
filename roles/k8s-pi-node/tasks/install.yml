@@ -2,15 +2,6 @@
 - name: Tear down pi-node
   import_tasks: tearDown.yml
 
-#- name: Add hosts
-#  lineinfile:
-#    path: /etc/hosts
-#    regexp: '.*{{ item }}$'
-#    line: "{{ hostvars[item].ansible_host }} {{item}}"
-#    state: present
-#  when: hostvars[item].ansible_host is defined
-#  with_items: "{{ groups.all }}"
-
 - name: Clean apt cache
   command: rm /var/lib/apt/lists/* -vf
 
@@ -50,9 +41,6 @@
 
 - name: Set promisc[layer 2 metallb https://github.com/metallb/metallb/issues/284]
   command: ifconfig wlan0 promisc
-
-#- name: Ensure legacy iptables
-#  shell: "update-alternatives --set iptables /usr/sbin/iptables-legacy && update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy && update-alternatives --set arptables /usr/sbin/arptables-legacy &&    update-alternatives --set ebtables /usr/sbin/ebtables-legacy"
 
 - name: Add k8s key
   apt_key:
