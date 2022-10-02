@@ -8,8 +8,8 @@
   vars:
     - ansible_user: root
 #    - network: flannel
-#    - network: weave
-    - network: calico
+    - network: weave
+#    - network: calico
 
 - name: Prepare worker node
   gather_facts: true

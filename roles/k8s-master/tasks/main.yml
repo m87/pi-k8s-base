@@ -4,11 +4,11 @@
     name: openshift
 
 - name: Initialize k8s cluster  # noqa 301
-  command: kubeadm init --pod-network-cidr=10.244.0.0/16
+  command: kubeadm init 
   when: network == 'calico'
 
 - name: Initialize k8s cluster  # noqa 301
-  command: kubeadm init --pod-network-cidr=10.32.0.0/12
+  command: kubeadm init 
   when: network == 'weave'
 
 - name: Initialize k8s cluster  # noqa 301
@@ -33,11 +33,6 @@
   with_items: '{{ lookup("url", "https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml", split_lines=False) | from_yaml_all | list }}'
   when: network == 'flannel'
 
-# TODO
-#- name: Install wave pod network
-#  shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-#  when: network == 'weave'
-
 - name: Install weave pod network
   block:
     - name: Get definition
@@ -54,12 +49,3 @@
   shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
   when: network == 'calico'
 
-#- name: Install calico pod network
-#  kubernetes.core.k8s:
-#    definition: "{{ item }}"
-#  with_items: '{{ lookup("url", "https://docs.projectcalico.org/manifests/calico.yaml", split_lines=False) | from_yaml_all | list }}'
-#  when: network == 'calico'
-
-#- name: test
-#  command: "kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=interface=wlan0"
-#  when: network == 'calico'
